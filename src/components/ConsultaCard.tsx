@@ -94,9 +94,12 @@ export default function ConsultaCard({
     });
   }
 
-  // Formata uma data no padrão brasileiro (25/03/2026)
-  function formatarData(data: Date): string {
-    return data.toLocaleDateString("pt-BR");
+  // Formata uma string ISO do backend no padrão brasileiro (25/03/2026 às 09:00)
+  function formatarData(dataHora: string): string {
+    const data = new Date(dataHora);
+    const dia = data.toLocaleDateString("pt-BR");
+    const hora = data.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+    return `${dia} às ${hora}`;
   }
 
   return (
@@ -167,17 +170,17 @@ export default function ConsultaCard({
         Aqui usamos as funções auxiliares formatarData() e formatarValor()
 
         Em vez de:
-        <Text>{consulta.data.toLocaleDateString("pt-BR")}</Text>
+        <Text>{consulta.dataHora.toLocaleDateString("pt-BR")}</Text>
 
         Fazemos:
-        <Text>{formatarData(consulta.data)}</Text>
+        <Text>{formatarData(consulta.dataHora)}</Text>
 
         Fica mais legível e fácil de manter!
         -----------------------------------------------------------------------
       */}
       <View style={styles.secao}>
         <Text style={styles.label}>📅 Dados da Consulta</Text>
-        <Text style={styles.valor}>Data: {formatarData(consulta.data)}</Text>
+        <Text style={styles.valor}>Data: {formatarData(consulta.dataHora)}</Text>
         <Text style={styles.valor}>
           Valor: {formatarValor(consulta.valor)}
         </Text>
