@@ -15,6 +15,7 @@ import { RootStackParamList } from "../../navigation/types";
 import { cadastrarMedico } from "../../services/medicoService";
 import { listarEspecialidades } from "../../services/especialidadeService";
 import { Especialidade } from "../../types/especialidade";
+import { extrairMensagemErro } from "../../utils/apiErro";
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, "CadastroMedico">;
@@ -71,8 +72,8 @@ export default function CadastroMedicoScreen({ navigation }: Props) {
           medicoNome: medico.nome,
         });
       }
-    } catch {
-      setErro("Erro ao cadastrar. CRM ja pode estar em uso.");
+    } catch (e) {
+      setErro(extrairMensagemErro(e, "Erro ao cadastrar o medico."));
     } finally {
       setSalvando(false);
     }
