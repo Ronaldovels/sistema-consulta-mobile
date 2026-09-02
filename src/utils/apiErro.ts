@@ -1,4 +1,5 @@
 import axios from "axios";
+import { isNetworkError } from "../services/api";
 
 /**
  * Extrai a mensagem de erro que o backend Spring devolve.
@@ -10,14 +11,14 @@ import axios from "axios";
  * erro 500 inesperado), usamos a mensagem padrao passada pela tela.
  */
 export function extrairMensagemErro(erro: unknown, padrao: string): string {
+  // Sem response = nao chegou no servidor (rede, URL errada, timeout)
+  if (isNetworkError(erro)) {
+    return "Servidor indisponivel. Verifique se o backend esta rodando e tente novamente.";
+  }
   if (axios.isAxiosError(erro)) {
     const dados = erro.response?.data as { erro?: string } | undefined;
     if (dados?.erro) {
       return dados.erro;
-    }
-    // Sem response = nao chegou no servidor (rede, URL errada, timeout)
-    if (!erro.response) {
-      return "Nao foi possivel falar com o servidor. Verifique sua conexao.";
     }
   }
   return padrao;

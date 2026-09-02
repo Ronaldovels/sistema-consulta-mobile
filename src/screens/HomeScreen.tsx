@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -6,15 +6,34 @@ import {
   TouchableOpacity,
   SafeAreaView,
   StatusBar,
+  ActivityIndicator,
 } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/types";
+import { healthCheck } from "../services/api";
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, "Home">;
 };
 
+type StatusServico = "verificando" | "online" | "offline";
+
 export default function HomeScreen({ navigation }: Props) {
+  const [statusServico, setStatusServico] =
+    useState<StatusServico>("verificando");
+
+  useEffect(() => {
+    verificarServico();
+  }, []);
+
+  async function verificarServico() {
+    setStatusServico("verificando");
+    const disponivel = await healthCheck();
+    setStatusServico(disponivel ? "online" : "offline");
+  }
+
+  const offline = statusServico === "offline";
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#79059C" />
@@ -22,11 +41,40 @@ export default function HomeScreen({ navigation }: Props) {
         <Text style={styles.titulo}>Sistema de Consultas</Text>
         <Text style={styles.subtitulo}>Como deseja acessar?</Text>
 
+        {/* Banner de status do servico */}
+        {statusServico === "verificando" && (
+          <View style={[styles.banner, styles.bannerVerificando]}>
+            <ActivityIndicator
+              size="small"
+              color="#fff"
+              style={styles.bannerSpinner}
+            />
+            <Text style={styles.bannerTexto}>
+              Verificando conexao com o servidor...
+            </Text>
+          </View>
+        )}
+
+        {offline && (
+          <View style={[styles.banner, styles.bannerOffline]}>
+            <Text style={styles.bannerTexto}>
+              ⚠️ Servidor indisponivel. Tente novamente mais tarde.
+            </Text>
+            <TouchableOpacity
+              onPress={verificarServico}
+              style={styles.tentarNovamenteBotao}
+            >
+              <Text style={styles.tentarNovamenteTexto}>Tentar novamente</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
         {/* Botao Paciente */}
         <TouchableOpacity
-          style={styles.botao}
+          style={[styles.botao, offline && styles.botaoDesabilitado]}
           onPress={() => navigation.navigate("LoginPaciente")}
           activeOpacity={0.85}
+          disabled={offline}
         >
           <Text style={styles.botaoTitulo}>Sou Paciente</Text>
           <Text style={styles.botaoDescricao}>
@@ -36,9 +84,14 @@ export default function HomeScreen({ navigation }: Props) {
 
         {/* Botao Medico */}
         <TouchableOpacity
-          style={[styles.botao, styles.botaoMedico]}
+          style={[
+            styles.botao,
+            styles.botaoMedico,
+            offline && styles.botaoDesabilitado,
+          ]}
           onPress={() => navigation.navigate("LoginMedico")}
           activeOpacity={0.85}
+          disabled={offline}
         >
           <Text style={[styles.botaoTitulo, styles.botaoMedicoTitulo]}>
             Sou Medico
@@ -74,7 +127,43 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "rgba(255,255,255,0.8)",
     textAlign: "center",
-    marginBottom: 52,
+    marginBottom: 32,
+  },
+  banner: {
+    width: "100%",
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 20,
+    alignItems: "center",
+  },
+  bannerVerificando: {
+    backgroundColor: "rgba(255,255,255,0.15)",
+    flexDirection: "row",
+  },
+  bannerOffline: {
+    backgroundColor: "rgba(220, 53, 69, 0.85)",
+  },
+  bannerSpinner: {
+    marginRight: 8,
+  },
+  bannerTexto: {
+    color: "#fff",
+    fontSize: 13,
+    textAlign: "center",
+    fontWeight: "500",
+  },
+  tentarNovamenteBotao: {
+    marginTop: 10,
+    borderWidth: 1,
+    borderColor: "#fff",
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+  },
+  tentarNovamenteTexto: {
+    color: "#fff",
+    fontSize: 13,
+    fontWeight: "600",
   },
   botao: {
     width: "100%",
@@ -87,6 +176,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 8,
     elevation: 5,
+  },
+  botaoDesabilitado: {
+    opacity: 0.4,
   },
   botaoMedico: {
     backgroundColor: "transparent",
